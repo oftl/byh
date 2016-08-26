@@ -1,0 +1,5 @@
+all = [
+    "Person",
+    "Bet",
+    "Wager",
+]
