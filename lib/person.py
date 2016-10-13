@@ -5,32 +5,52 @@ import db
 
 class Person (byh.Byh):
 
-    def __init__ (self, **kwa):
-        # self.db ..... database connection
-        # self.data ... loaded peewee object
 
+    def __init__ (self, **kwa):
         super().__init__ ()
 
-        if kwa.get ('nick') and len (kwa) == 1:
+        if ( kwa.get ('nick') or kwa.get ('id') ) and len (kwa) == 1:
             self.load (**kwa)
         else:
             self.create (**kwa)
 
+
     def load (self, **kwa):
-        self.data = db.Person.get (db.Person.nick == kwa.get ('nick'))
+        if kwa.get ('nick'):
+            self.data = db.Person.get (db.Person.nick == kwa.get ('nick'))
+        if kwa.get ('id'):
+            self.data = db.Person.get (db.Person.id == kwa.get ('id'))
+
 
     def create (self, **kwa):
         self.data = db.Person.create (
-            nick = kwa.get ('nick'),
-            pwhash = hashlib.md5(kwa.get ('pw').encode()).hexdigest(),
-            hats = int (kwa.get ('hats')),
+            nick   = kwa.get('nick'),
+            pwhash = hashlib.md5 (kwa.get ('pw').encode()).hexdigest(),
+            hats   = int (kwa.get('hats')),
         )
 
-    def auth (self, **kwa):
-        if not self.data:
-            raise UserWarning ('no person loaded')
+        self._dirty = True
 
-        return self.data.pwhash == hashlib.md5 (kwa.get ('pw').encode()).hexdigest()
+
+    def save (self):
+        if self._dirty:
+            self.data.save()
+            self._dirty = False
+
+
+    def auth (self, **kwa):
+        pw = kwa.get ('pw')
+
+        return self.data.pwhash == hashlib.md5 (pw.encode()).hexdigest()
+
+    ###
+
+    def __repr__ (self):
+        return '%(classname)s (nick = "%(nick)s", hats = %(hats)s)' % dict (
+            classname = self.__class__.__name__,
+            nick = self.data.nick,
+            hats = self.data.hats,
+        )
 
     # properties
     #
@@ -42,7 +62,6 @@ class Person (byh.Byh):
     @nick.setter
     def nick (self, v):
         self.data.nick = v
-        self.data.save()
 
     @property
     def hats (self):
@@ -50,5 +69,8 @@ class Person (byh.Byh):
 
     @hats.setter
     def hats (self, v):
-        self.data.hats = int (v)
-        self.data.save()
+        self.data.hats = v
+
+    @property
+    def pw (self, v):
+        self.data.pwhash = hashlib.md5(self.v.encode()).hexdigest(),

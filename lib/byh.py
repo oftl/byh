@@ -8,5 +8,17 @@ class Byh (object):
         db.db.connect()
         self.db = db.db
 
+        # True if self.data differs from storage
+        self._dirty = False
+
+        self._new = False
+
     def log (msg):
         print (msg)
+
+    @property
+    def id (self):
+        if self.data.id:
+            return self.data.id
+        else:
+            raise LookupError ('object has no member "id"')

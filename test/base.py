@@ -11,6 +11,7 @@ class TestBase (unittest.TestCase):
             db.Person,
             db.Bet,
             db.Wager,
+            db.Outcome,
         ])
 
         db.Person.create (
@@ -35,4 +36,6 @@ class TestBase (unittest.TestCase):
         db.Person.drop_table()
         db.Bet.drop_table()
         db.Wager.drop_table()
-        # db.close()
+        db.Outcome.drop_table()
+
+        self.db.close()

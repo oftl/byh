@@ -13,7 +13,15 @@ class Person (Model):
 
 class Bet (Model):
     owner = ForeignKeyField (Person, related_name = 'bets')
-    name = CharField()
+    text = CharField()
+
+    class Meta:
+        database = db
+
+class Outcome (Model):
+    bet = ForeignKeyField (Bet, related_name = 'outcomes')
+    text = CharField()
+    odds = BigIntegerField()
 
     class Meta:
         database = db
