@@ -1,65 +1,101 @@
 import hashlib
 
-import lib.byh as byh
+from lib.byh import Byh
 from lib.outcome import Outcome
+from lib.wager import Wager
 import db
 
-class Bet (byh.Byh):
+class Bet (Byh):
 
     def __init__ (self, **kwa):
+        text     = kwa.get ('text')
+        owner    = kwa.get ('owner')
+        outcomes = kwa.get ('outcomes')
 
         super().__init__ ()
 
         if kwa.get ('id') and len (kwa) == 1:
             self.load (**kwa)
+
+        elif text and owner and outcomes:
+            self._new = True
+
+            self._text  = text
+            self._owner = owner
+
+            self._outcomes = [
+                Outcome (
+                    text = o.get ('text'),
+                    odds = o.get ('odds'),
+                )
+                for o in outcomes
+            ]
+
         else:
-            self.create (**kwa)
-
-
-    def create (self, **kwa):
-        self.data = db.Bet.create (
-            owner = kwa.get ('owner'),
-            text  = kwa.get ('text'),
-        )
-
-        self.data.outcomes = [
-            db.Outcome.create (
-                bet_id = self.data.id,
-                text = o.get('text'),
-                odds = o.get('odds'),
-            )
-            for o in kwa.get ('outcomes')
-        ]
-
-        # ok? # self.data.outcomse = ...
-
-#        map (
-#            lambda o: db.Outcome.create (
-#                bet = self.data.id,
-#                text = o.text,
-#                odds = o.odds,
-#            ),
-#            self.kwa.get ('outcomes'),
-#        )
-
-        self._new = True
-
+            raise UserWarning ('missing params')
 
     def load (self, **kwa):
-        data = db.Bet.get (db.bet.id == kwa.get ('id'))
+        id = kwa.get ('id')
 
+        data = db.Bet.get (db.bet.id == id)
+
+        self._id = id
+        self._text = data.text
+        self._owner = Person (nick = data.owner.nick)
+        self._outcomes = [
+            Outcome (
+                text = o.text,
+                odds = o.odds,
+            )
+            for o in data.outcomes
+        ]
+
+        self._db = data
 
     def save (self):
-        if self._dirty:
-            self.data.save()
+        if self._new:
+            self._db = db.Bet.create (
+                text = self._text,
+                owner = self._owner._db,
+            )
 
+            for o in self._outcomes:
+                o.set_db (db.Outcome.create (
+                    bet = self._db,
+                    text = o.text,
+                    odds = o.odds,
+                ))
+
+            self._new = False
+
+        else:
+            self._db.text = self._text
+            self._db.owner = self._owner.id
+            self._db.hats = self._hats
+            self._db.outcomes = self._outcomes  # ?!
+
+            self._db.save()
+
+    def place (self, **kwa):
+        owner = kwa.get ('owner')
+        outcome = kwa.get ('outcome')
+        hats  = kwa.get ('hats')
+
+        w = Wager (
+            owner = owner,
+            bet   = self,
+            outcome = outcome,
+            hats  = hats,
+        )
+
+        w.save()
 
     def __repr__ (self):
         return '%(classname)s (text = "%(text)s", owner = %(owner)s, outcomes = %(outcomes)s)' % dict (
             classname = self.__class__.__name__,
-            text = self.data.text,
-            owner = repr(self.data.owner),
-            outcomes = repr(self.data.outcomes),
+            text = self.text,
+            owner = repr(self.owner),
+            outcomes = repr(self.outcomes),
         )
 
     #
@@ -68,24 +104,22 @@ class Bet (byh.Byh):
 
     @property
     def owner (self):
-        return self.data.owner
+        return self._owner
 
     @property
     def text (self):
-        return self.data.text
+        return self._text
 
     @text.setter
     def text (self, v):
-        self.data.text = v
-        self.data.save()
+        self._text = v
 
     # outcomes can only be access (r and w) as a whole list
     #
     @property
     def outcomes (self):
-        return [ Outcome (id = o.id) for o in self.data.outcomes ]
+        return self._outcomes
 
-    # @outcomes.setter
-    # def outcomes (self, v):
-        # self.data.outcomes = v
-        # self.data.save()
+    @outcomes.setter
+    def outcomes (self, v):
+        self._text = v

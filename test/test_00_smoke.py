@@ -9,7 +9,7 @@ import test.base
 
 class TestSmoke (test.base.TestBase):
 
-    def test_person (self):
+    def test_create_person (self):
         jon = Person (
             nick = 'jon',
             pw = 'jon',
@@ -27,12 +27,12 @@ class TestSmoke (test.base.TestBase):
 
         self.assertEqual (jon.hats, 101)
 
-    def test_bet (self):
+    def test_create_bet (self):
         neil = Person (nick = 'neil')
 
         b1 = Bet (
             text = 'Derby 1970',
-            owner = neil.id,
+            owner = neil,
             outcomes = [
                 dict (text = 'Rapid', odds = 80),
                 dict (text = 'Austria', odds = 20),
@@ -42,3 +42,36 @@ class TestSmoke (test.base.TestBase):
         self.assertEqual (b1.text, 'Derby 1970')
         self.assertEqual (b1.owner.nick, 'neil')
         self.assertEqual (len (b1.outcomes), 2)
+
+    def test_create_wager (self):
+        neil = Person (nick = 'neil')
+        mike = Person (nick = 'mike')
+
+        b1 = Bet (
+            text = 'Derby 1970',
+            owner = neil,
+            outcomes = [
+                dict (text = 'Rapid', odds = 80),
+                dict (text = 'Austria', odds = 20),
+            ]
+        )
+        b1.save ()
+
+        wgr = Wager (
+            bet   = b1,
+            owner = mike,
+            oc    = list (filter (lambda b: b.text == 'Rapid', b1.outcomes)).pop(),
+            hats  = 12,
+        )
+
+        # wgr.save()
+        # same error as via Bet.place()
+
+        b1.place (
+            owner = mike,
+            oc    = list (filter (lambda b: b.text == 'Rapid', b1.outcomes)).pop(),
+            hats  = 12,
+        )
+
+        ##
+        self.assertEqual (w1.owner.nick, 'neil')

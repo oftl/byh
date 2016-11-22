@@ -1,36 +1,23 @@
-import hashlib
-
 import lib.byh as byh
 import db
 
 class Outcome (byh.Byh):
 
     def __init__ (self, **kwa):
+        text = kwa.get ('text')
+        odds = kwa.get ('odds')
+
         super().__init__ ()
 
-        if kwa.get ('id') and len (kwa) == 1:
-            self.load (**kwa)
-        else:
-            self.create (**kwa)
-
-    def load (self, **kwa):
-        self.data = db.Outcome.get (db.Outcome.id == kwa.get ('id'))
-
-    def create (self, **kwa):
-        self.data = db.Outcome.create (
-            bet = kwa.get ('bet'),
-            text = kwa.get ('text'),
-            odds = kwa.get ('odds'),
-        )
-
-    ###
+        self._new = True
+        self._text = text
+        self._odds = odds
 
     def __repr__ (self):
-        return '%(classname)s (bet = "%(bet)s", text = %(text)s, odds = %(odds)s)' % dict (
+        return '%(classname)s (text = %(text)s, odds = %(odds)s)' % dict (
             classname = self.__class__.__name__,
-            bet = repr (self.data.bet),
-            text = self.data.text,
-            odds = self.data.odds,
+            text = self.text,
+            odds = self.odds,
         )
 
     #
@@ -39,27 +26,20 @@ class Outcome (byh.Byh):
 
     @property
     def text (self):
-        return self.data.text
+        return self._text
 
     @text.setter
     def text (self, v):
-        self.data.text = v
-        self.data.save()
+        self._text = v
 
     @property
     def odds (self):
-        return self.data.odds
+        return self._odds
 
     @odds.setter
     def odds (self, v):
-        self.data.odds = int (v)
-        self.data.save()
+        self._odds = int (v)
 
-    # @property
-    # def bet (self):
-    #     return self.data.bet
-
-    # @bet.setter
-    # def bet (self, v):
-    #     self.data.bet = int (v)
-    #     self.data.save()
+    @property
+    def id (self):
+        return self._db.id
