@@ -28,9 +28,6 @@ class Wager (byh.Byh):
     def save (self):
         if self._new:
 
-            # print (self._outcome._db.id)
-            # .. 1
-            print (self._outcome._db.id)
             self._db = db.Wager.create (
                 owner = self._owner._db,
                 bet   = self._bet._db,

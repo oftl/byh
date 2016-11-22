@@ -57,10 +57,10 @@ class TestSmoke (test.base.TestBase):
         )
         b1.save ()
 
-        wgr = Wager (
+        w1 = Wager (
             bet   = b1,
             owner = mike,
-            oc    = list (filter (lambda b: b.text == 'Rapid', b1.outcomes)).pop(),
+            outcome = list (filter (lambda b: b.text == 'Rapid', b1.outcomes)).pop(),
             hats  = 12,
         )
 
@@ -69,9 +69,9 @@ class TestSmoke (test.base.TestBase):
 
         b1.place (
             owner = mike,
-            oc    = list (filter (lambda b: b.text == 'Rapid', b1.outcomes)).pop(),
+            outcome = list (filter (lambda b: b.text == 'Rapid', b1.outcomes)).pop(),
             hats  = 12,
         )
 
         ##
-        self.assertEqual (w1.owner.nick, 'neil')
+        self.assertEqual (w1.owner.nick, 'mike')
