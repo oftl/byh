@@ -1,22 +1,25 @@
+import os
+
 from peewee import *
 
-db = SqliteDatabase ('byh.db')
+DB_FILENAME = './BYH_TEST_DATABASE'
+DB = SqliteDatabase (DB_FILENAME)
 
-class Person (Model):
+class User (Model):
     nick = CharField()
     pwhash = CharField()
     hats = BigIntegerField()
     created = TimestampField()
 
     class Meta:
-        database = db
+        database = DB
 
 class Bet (Model):
-    owner = ForeignKeyField (Person, related_name = 'bets')
+    owner = ForeignKeyField (User, related_name = 'bets')
     text  = CharField()
 
     class Meta:
-        database = db
+        database = DB
 
 class Outcome (Model):
     bet    = ForeignKeyField (Bet, related_name = 'outcomes')
@@ -25,15 +28,17 @@ class Outcome (Model):
     winner = BooleanField(null=True)
 
     class Meta:
-        database = db
+        database = DB
 
 class Wager (Model):
-    owner   = ForeignKeyField (Person, related_name = 'wagers')
+    owner   = ForeignKeyField (User, related_name = 'wagers')
     bet     = ForeignKeyField (Bet, related_name = 'wagers')
     outcome = ForeignKeyField (Outcome, related_name = 'wagers')
     hats    = BigIntegerField()
 
     class Meta:
-        database = db
+        database = DB
 
 # class Ground
+
+db = DB

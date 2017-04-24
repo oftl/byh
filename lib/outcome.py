@@ -1,28 +1,42 @@
-import lib.byh as byh
-import db
+import lib.byh
 
-class Outcome (byh.Byh):
+class Outcome (lib.byh.Byh):
 
     def __init__ (self, **kwa):
-        text = kwa.get ('text')
-        odds = kwa.get ('odds')
-
-        super().__init__ ()
-
-        self._new = True
-        self._text = text
-        self._odds = odds
+        self._id    = kwa.get ('id')
+        self._new   = kwa.get ('_new')
+        self._text  = kwa.get ('text')
+        self._odds  = kwa.get ('odds')
+        # self._winner = kwa.get ('winner')
+        self._db    = kwa.get ('db')
 
     def __repr__ (self):
-        return '%(classname)s (text = %(text)s, odds = %(odds)s)' % dict (
+        return '{classname} (text = "{text}", odds = {odds})'.format (
             classname = self.__class__.__name__,
+            # id   = self.id,
             text = self.text,
             odds = self.odds,
+            # winner = self.winner,
         )
 
-    #
-    # properties
-    #
+    @property
+    def id (self):
+        if self._new:
+            raise LookupError ('outcome not saved')
+
+        return self._id
+
+    @id.setter
+    def id (self, v):
+        self._id = v
+
+    @property
+    def db (self):
+        return self._db
+
+    @db.setter
+    def db (self, v):
+        self._db = v
 
     @property
     def text (self):
@@ -38,8 +52,12 @@ class Outcome (byh.Byh):
 
     @odds.setter
     def odds (self, v):
-        self._odds = int (v)
+        self._odds = v
 
     @property
-    def id (self):
-        return self._db.id
+    def winner (self):
+        return self._winner
+
+    @winner.setter
+    def winner (self, v):
+        self._winner = v

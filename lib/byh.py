@@ -1,15 +1,16 @@
-import db
+import logging
+
+logging.basicConfig (
+    format = '%(asctime)s %(message)s',
+    filename = './byh.log',
+    level = logging.INFO,
+)
 
 class Byh (object):
+    @property
+    def id (self):
+        return self._id
 
-    def __init__ (self):
-        # connection would also happen transparently
-        # as soon as queries are run
-        db.db.connect()
-        self.db = db.db
-
-    def log (msg):
-        print (msg)
-
-    def set_db (self, db):
-        self._db = db
+    @id.setter
+    def id (self, v):
+        self._id = v

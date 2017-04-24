@@ -1,110 +1,163 @@
-import hashlib
+import warnings
+import logging
 
-from lib.byh import Byh
-from lib.outcome import Outcome
-from lib.wager import Wager
-import db
+import lib.byh
+import lib.db as db
+import lib.wager
+import lib.outcome
 
-class Bet (Byh):
+class Bet (lib.byh.Byh):
 
     def __init__ (self, **kwa):
-        text     = kwa.get ('text')
         owner    = kwa.get ('owner')
+        text     = kwa.get ('text')
         outcomes = kwa.get ('outcomes')
 
-        super().__init__ ()
-
-        if kwa.get ('id') and len (kwa) == 1:
+        if id and len (kwa) == 1:
             self.load (**kwa)
-
-        elif text and owner and outcomes:
-            self._new = True
-
-            self._text  = text
-            self._owner = owner
-
-            self._outcomes = [
-                Outcome (
-                    text = o.get ('text'),
-                    odds = o.get ('odds'),
-                )
-                for o in outcomes
-            ]
-
+        elif owner and text and outcomes:
+            self.create (**kwa)
         else:
-            raise UserWarning ('missing params')
+            raise UserWarning
+
 
     def load (self, **kwa):
         id = kwa.get ('id')
 
-        data = db.Bet.get (db.bet.id == id)
+        self.db = db.Bet.get (db.Bet.id == id)
 
-        self._id = id
-        self._text = data.text
-        self._owner = Person (nick = data.owner.nick)
-        self._outcomes = [
-            Outcome (
-                text = o.text,
-                odds = o.odds,
+        self._new  = False
+        self.id    = self.db.id
+        self.owner = self.db.owner
+        self.text  = self.db.text
+
+        self.outcomes = [
+            lib.outcome.Outcome (
+                _new   = self._new,
+                id     = oc.id,
+                text   = oc.text,
+                odds   = oc.odds,
+                # winner = oc.winner,
+                db     = oc,
             )
-            for o in data.outcomes
+            for oc in self.db.outcomes
         ]
 
-        self._db = data
+
+    def create (self, **kwa):
+        self._new  = True
+        self.owner = kwa.get ('owner')
+        self.text  = kwa.get ('text')
+
+        self.outcomes = [
+            lib.outcome.Outcome (
+                _new   = self._new,
+                text   = oc.get ('text'),
+                odds   = oc.get ('odds'),
+                # winner = oc.get ('winner'),
+            )
+            for oc in kwa.get ('outcomes')
+        ]
+
 
     def save (self):
         if self._new:
-            self._db = db.Bet.create (
-                text = self._text,
-                owner = self._owner._db,
+            self.db = db.Bet.create (
+                owner = self.owner.db,
+                text  = self.text,
             )
 
-            for o in self._outcomes:
-                o.set_db (db.Outcome.create (
-                    bet = self._db,
-                    text = o.text,
-                    odds = o.odds,
-                ))
+            self.id = self.db.id
+
+            for oc in self.outcomes:
+                new_o = db.Outcome.create (
+                    _new   = self._new,
+                    bet    = self.db,
+                    text   = oc.text,
+                    odds   = oc.odds,
+                    # winner = oc.winner,
+                )
+
+                oc.db = new_o
+                oc.id = new_o.id
 
             self._new = False
 
         else:
-            self._db.text = self._text
-            self._db.owner = self._owner.id
-            self._db.hats = self._hats
-            self._db.outcomes = self._outcomes  # ?!
+            self.db.owner = self.owner
+            self.db.text  = self.text
+            warnings.warn ('outcomes can not be updated')
 
-            self._db.save()
+            self.db.save()
 
-    def place (self, **kwa):
-        owner = kwa.get ('owner')
+    def bet (self, **kwa):
+        user    = kwa.get ('user')
+        hats    = kwa.get ('hats')
         outcome = kwa.get ('outcome')
-        hats  = kwa.get ('hats')
 
-        w = Wager (
-            owner = owner,
-            bet   = self,
+        user.sub (hats)
+
+        lib.wager.Wager (
+            hats    = hats,
+            owner   = user,
+            bet     = self,
             outcome = outcome,
-            hats  = hats,
-        )
+        ).save()
 
-        w.save()
+    def settle (self, **kwa):
+        outcome = kwa.get ('outcome')
+        outcome.winner = True
+        # outcome.save()
+        wins = 0
+        inputs = 0
+
+        for w in self.wagers:
+            inputs += w.hats
+            if w.outcome.id == outcome.id:
+                wins += w.hats * outcome.odds
+
+        assert (self.pot == inputs)
+
+        payout_factor = self.pot / wins
+
+        logging.info ('[settle bet <{}>] pot: {}'.format (self.id, self.pot))
+        logging.info ('[settle bet <{}>] inputs: {}'.format (self.id, inputs))
+        logging.info ('[settle bet <{}>] total wins: {}'.format (self.id, wins))
+        logging.info ('[settle bet <{}>] payout factor: {}'.format (self.id, payout_factor))
+
 
     def __repr__ (self):
-        return '%(classname)s (text = "%(text)s", owner = %(owner)s, outcomes = %(outcomes)s)' % dict (
+        ret = '{classname} (owner = "{owner}", text = {text})'.format (
             classname = self.__class__.__name__,
+            # id   = self.id,
+            owner = self.owner.nick,
             text = self.text,
-            owner = repr(self.owner),
-            outcomes = repr(self.outcomes),
         )
 
-    #
-    # properties
-    #
+        for oc in self.outcomes:
+            ret += str(oc)
+
+        return ret
+
+
+    @property
+    def id (self):
+        if self._new:
+            raise LookupError ('bet not saved')
+
+        return self._id
+
+    @id.setter
+    def id (self, v):
+        self._id = v
 
     @property
     def owner (self):
         return self._owner
+
+    @owner.setter
+    def owner (self, v):
+        self._owner = v
 
     @property
     def text (self):
@@ -114,12 +167,21 @@ class Bet (Byh):
     def text (self, v):
         self._text = v
 
-    # outcomes can only be access (r and w) as a whole list
-    #
     @property
     def outcomes (self):
         return self._outcomes
 
     @outcomes.setter
     def outcomes (self, v):
-        self._text = v
+        self._outcomes = v
+
+    @property
+    def wagers (self):
+        return [ lib.wager.Wager (id = w.id) for w in self.db.wagers ]
+
+    @property
+    def pot (self):
+        res = 0
+        for w in self.wagers:
+            res += w.hats
+        return res

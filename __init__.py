@@ -1,5 +1,0 @@
-all = [
-    "Person",
-    "Bet",
-    "Wager",
-]
