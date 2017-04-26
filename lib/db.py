@@ -17,6 +17,7 @@ class User (Model):
 class Bet (Model):
     owner = ForeignKeyField (User, related_name = 'bets')
     text  = CharField()
+    settled = BooleanField (null=True)
 
     class Meta:
         database = DB
@@ -29,6 +30,14 @@ class Outcome (Model):
 
     class Meta:
         database = DB
+
+# # which outcome(s) won
+# class BetOutcome (Model):
+#     bet     = ForeignKeyField (Bet, related_name = 'winner')
+#     outcome = ForeignKeyField (Outcome)
+# 
+#     class Meta:
+#         database = DB
 
 class Wager (Model):
     owner   = ForeignKeyField (User, related_name = 'wagers')

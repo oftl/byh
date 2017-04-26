@@ -55,7 +55,7 @@ class Wager (lib.byh.Byh):
 
 
     def __repr__ (self):
-        ret = '{classname} (hats = "{hats}", owner = {owner}, bet = {bet}, outcome = {outcome})'.format (
+        return '{classname} (hats = "{hats}", owner = {owner}, bet = {bet}, outcome = {outcome})'.format (
             classname = self.__class__.__name__,
             # id    = self.id,
             hats    = self.hats,

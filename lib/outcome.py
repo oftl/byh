@@ -7,16 +7,16 @@ class Outcome (lib.byh.Byh):
         self._new   = kwa.get ('_new')
         self._text  = kwa.get ('text')
         self._odds  = kwa.get ('odds')
-        # self._winner = kwa.get ('winner')
+        self._winner = kwa.get ('winner')
         self._db    = kwa.get ('db')
 
     def __repr__ (self):
-        return '{classname} (text = "{text}", odds = {odds})'.format (
+        return '{classname} (id = "{id}", text = "{text}", odds = {odds}, winner = "{winner}")'.format (
             classname = self.__class__.__name__,
-            # id   = self.id,
+            id   = self.id,
             text = self.text,
             odds = self.odds,
-            # winner = self.winner,
+            winner = self.winner,
         )
 
     @property

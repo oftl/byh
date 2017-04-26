@@ -120,6 +120,13 @@ class User (lib.byh.Byh, lib.account.Account):
     def wagers (self):
         return [ lib.wager.Wager (id = w.id) for w in self.db.wagers ]
 
+    @property
+    def name (self):
+        return '{classname} (nick = {nick})'.format (
+            classname = self.__class__.__name__,
+            nick = self.nick,
+        )
+
 ### helpers
 ###
 
