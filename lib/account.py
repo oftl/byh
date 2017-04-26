@@ -19,4 +19,5 @@ class Account (object):
 
     @balance.setter
     def balance (self, v):
+        logging.info ('setting balance of {} to {}'.format (self.name, v))
         self._balance = v
