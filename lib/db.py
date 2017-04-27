@@ -18,6 +18,7 @@ class Bet (Model):
     owner = ForeignKeyField (User, related_name = 'bets')
     text  = CharField()
     settled = BooleanField (null=True)
+    payout_strategy = CharField()
 
     class Meta:
         database = DB

@@ -6,6 +6,8 @@ import lib.db as db
 import lib.wager
 import lib.outcome
 
+import lib.payout.simple
+
 class Bet (lib.byh.Byh):
 
     def __init__ (self, **kwa):
@@ -13,10 +15,12 @@ class Bet (lib.byh.Byh):
         text     = kwa.get ('text')
         outcomes = kwa.get ('outcomes')
 
-        self._wagers_win = None
+        self._wagers_won = None
         self._wins       = None
         self._inputs     = None
-        self._winner     = None
+        self._outcome_won = None
+
+        self.payout_strategy = None
 
         if id and len (kwa) == 1:
             self.load (**kwa)
@@ -36,6 +40,7 @@ class Bet (lib.byh.Byh):
         self.owner = self.db.owner
         self.text  = self.db.text
         self.settled = self.db.settled
+        self.payout_strategy = self.db.payout_strategy
 
         self.outcomes = [
             lib.outcome.Outcome (
@@ -55,6 +60,7 @@ class Bet (lib.byh.Byh):
         self.owner = kwa.get ('owner')
         self.text  = kwa.get ('text')
         self.settled = kwa.get ('settled')
+        self.payout_strategy = kwa.get ('payout_strategy') or 'simple'
 
         self.outcomes = [
             lib.outcome.Outcome (
@@ -73,6 +79,7 @@ class Bet (lib.byh.Byh):
                 owner = self.owner.db,
                 text  = self.text,
                 settled = self.settled,
+                payout_strategy = self.payout_strategy,
             )
 
             self.id = self.db.id
@@ -95,6 +102,7 @@ class Bet (lib.byh.Byh):
             self.db.owner = self.owner
             self.db.text  = self.text
             self.db.settled = self.settled
+            self.db.payout_strategy = self.payout_strategy
 
             warnings.warn ('outcomes can not be updated')
 
@@ -120,13 +128,10 @@ class Bet (lib.byh.Byh):
         outcome.winner = True
         self.settled   = True
 
-        payout_factor = self.pot / self.wins
-
-        logging.info ('[settle bet <{}>] pot: {}'.format (self.id, self.pot))
-        logging.info ('[settle bet <{}>] inputs: {}'.format (self.id, self.inputs))
-        logging.info ('[settle bet <{}>] total wins: {}'.format (self.id, self.wins))
-        logging.info ('[settle bet <{}>] payout factor: {}'.format (self.id, payout_factor))
-
+        # strategy as in GOF, Strategy, but selected by Compositor (lib.payout.payout.Payout)
+        # parameter bet would be the context (here: self for caller)
+        strategy = lib.payout.payout.Payout (bet = self)
+        strategy.payout()
 
     def __repr__ (self):
         ret = '{classname} (owner = "{owner}", text = {text})'.format (
@@ -190,6 +195,14 @@ class Bet (lib.byh.Byh):
         self._settled = v
 
     @property
+    def payout_strategy (self):
+        return self._payout_strategy
+
+    @payout_strategy.setter
+    def payout_strategy (self, v):
+        self._payout_strategy = v
+
+    @property
     def pot (self):
         res = 0
         # TODO sum()
@@ -198,46 +211,46 @@ class Bet (lib.byh.Byh):
         return res
 
     @property
-    def wagers_win (self, **kwa):
+    def wagers_won (self, **kwa):
         """returns [ lib.wager.Wager ]
         """
 
         if not self.settled:
             raise UserWarning ('bet not settled')
 
-        if not self._wagers_win:
-            self._wagers_win = filter (
-                lambda w: w.outcome.id == self.winner.id,
+        if not self._wagers_won:
+            self._wagers_won = filter (
+                lambda w: w.outcome.id == self.outcome_won.id,
                 self.wagers
             )
 
-        return self._wagers_win
+        return self._wagers_won
 
     @property
-    def winner (self):
+    def outcome_won (self):
         """returns lib.outcome.Outcome
         """
 
         if not self.settled:
             raise UserWarning ('bet not settled')
 
-        if not self._winner:
-            self._winner = list (filter (
+        if not self._outcome_won:
+            self._outcome_won = list (filter (
                 lambda o: o.winner == True,
                 self.outcomes
             )).pop()
 
-            if not self._winner:
+            if not self._outcome_won:
                 raise UserWarning ('no winning outcome set')
 
-        return self._winner
+        return self._outcome_won
 
     @property
     def wins (self):
         if not self.settled:
             raise UserWarning ('bet not settled')
 
-        return sum ([w.hats * self.winner.odds for w in self.wagers_win])
+        return sum ([w.hats * self.outcome_won.odds for w in self.wagers_won])
 
     @property
     def inputs (self):

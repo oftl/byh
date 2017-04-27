@@ -7,6 +7,8 @@ logging.basicConfig (
 )
 
 class Byh (object):
+    logger = logging.getLogger('byhlog')
+
     @property
     def name (self):
         return '{classname}'.format (classname = self.__class__.__name__)
