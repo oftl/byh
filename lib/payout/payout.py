@@ -9,14 +9,17 @@ class Payout (object):
     logger = logging.getLogger('byhlog')
 
     def __init__ (self, **kwa):
+        # self.bet is the context in GOF terms
         self.bet = kwa.get ('bet')
 
+        # select strategy / payout algorithm to use
+        #
         self.strategy = dict (
             simple = lib.payout.simple.Simple ()
         ).get (self.bet.payout_strategy)
 
         if not self.strategy:
-            raise LookupError ('payout strategy <{}> not available'.format (strategy))
+            raise LookupError ('payout strategy <{}> not available'.format (self.bet.payout_strategy))
 
     def payout (self):
         payout_factor = self.bet.pot / self.bet.wins
