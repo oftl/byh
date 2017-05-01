@@ -49,8 +49,8 @@ class TestBase (unittest.TestCase):
             owner    = laika,
             text     = 'Who will win the next Derby ?',
             outcomes = [
-                dict (text = 'Rapid',   odds = 2.00),
-                dict (text = 'Austria', odds = 2.00),
+                dict (text = 'Rapid',   odds = 4.60),
+                dict (text = 'Austria', odds = 4.60),
             ]
         )
         derby.save()

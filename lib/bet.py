@@ -75,6 +75,8 @@ class Bet (lib.byh.Byh):
 
     def save (self):
         if self._new:
+            self._new = False
+
             self.db = db.Bet.create (
                 owner = self.owner.db,
                 text  = self.text,
@@ -86,7 +88,6 @@ class Bet (lib.byh.Byh):
 
             for oc in self.outcomes:
                 new_o = db.Outcome.create (
-                    _new   = self._new,
                     bet    = self.db,
                     text   = oc.text,
                     odds   = oc.odds,
@@ -95,8 +96,6 @@ class Bet (lib.byh.Byh):
 
                 oc.db = new_o
                 oc.id = new_o.id
-
-            self._new = False
 
         else:
             self.db.owner = self.owner
@@ -114,6 +113,7 @@ class Bet (lib.byh.Byh):
         outcome = kwa.get ('outcome')
 
         user.sub (hats)
+        user.save ()
 
         lib.wager.Wager (
             hats    = hats,
@@ -203,14 +203,6 @@ class Bet (lib.byh.Byh):
         self._payout_strategy = v
 
     @property
-    def pot (self):
-        res = 0
-        # TODO sum()
-        for w in self.wagers:
-            res += w.hats
-        return res
-
-    @property
     def wagers_won (self, **kwa):
         """returns [ lib.wager.Wager ]
         """
@@ -219,10 +211,10 @@ class Bet (lib.byh.Byh):
             raise UserWarning ('bet not settled')
 
         if not self._wagers_won:
-            self._wagers_won = filter (
+            self._wagers_won = list (filter (
                 lambda w: w.outcome.id == self.outcome_won.id,
                 self.wagers
-            )
+            ))
 
         return self._wagers_won
 
@@ -253,7 +245,7 @@ class Bet (lib.byh.Byh):
         return sum ([w.hats * self.outcome_won.odds for w in self.wagers_won])
 
     @property
-    def inputs (self):
+    def pot (self):
         if not self.settled:
             raise UserWarning ('bet not settled')
 

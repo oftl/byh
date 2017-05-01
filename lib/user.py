@@ -1,4 +1,5 @@
 import hashlib
+import logging
 
 import lib.byh
 import lib.account

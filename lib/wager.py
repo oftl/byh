@@ -29,10 +29,9 @@ class Wager (lib.byh.Byh):
         self._new    = False
         self.id      = self.db.id
         self.hats    = self.db.hats
-        self.owner   = lib.user.User (id = self.db.owner.id)
-        self.bet     = lib.bet.Bet (id = self.db.bet.id)
-        self.outcome = lib.outcome.Outcome (id = self.db.outcome.id)
-
+        self.owner   = None
+        self.bet     = None
+        self.outcome = None
 
     def create (self, **kwa):
         self._new    = True
@@ -86,6 +85,9 @@ class Wager (lib.byh.Byh):
 
     @property
     def owner (self):
+        if not self._owner:
+            self._owner = lib.user.User (id = self.db.owner.id)
+
         return self._owner
 
     @owner.setter
@@ -94,6 +96,9 @@ class Wager (lib.byh.Byh):
 
     @property
     def bet (self):
+        if not self._bet:
+            self._bet = lib.bet.Bet (id = self.db.bet.id)
+
         return self._bet
 
     @bet.setter
@@ -102,6 +107,16 @@ class Wager (lib.byh.Byh):
 
     @property
     def outcome (self):
+        if not self._outcome:
+            self._outcome = lib.outcome.Outcome (
+                _new   = False,
+                id     = self.db.outcome.id,
+                text   = self.db.outcome.text,
+                odds   = self.db.outcome.odds,
+                winner = self.db.outcome.winner,
+                db     = self.db.outcome,
+            )
+
         return self._outcome
 
     @outcome.setter

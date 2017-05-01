@@ -78,7 +78,13 @@ class TestSmoke (tests.base.TestBase):
         self.assertEqual (99, mike.hats)
 
         derby.settle (outcome = o1)
+        self.assertEqual (1, sum (1 for _ in (i for i in derby.wagers_won)))
 
-        self.assertEqual (99, neil.hats)
-        self.assertEqual (99, buzz.hats)
-        self.assertEqual (105, mike.hats)
+        # reload for wins/losses
+        neil = lib.user.User (nick = 'neil')
+        buzz = lib.user.User (nick = 'buzz')
+        mike = lib.user.User (nick = 'mike')
+
+        self.assertEqual (99.0, neil.hats)
+        self.assertEqual (99.0, buzz.hats)
+        self.assertEqual (105.0, mike.hats)
