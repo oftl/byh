@@ -85,6 +85,6 @@ class TestSmoke (tests.base.TestBase):
         buzz = lib.user.User (nick = 'buzz')
         mike = lib.user.User (nick = 'mike')
 
-        self.assertEqual (99.0, neil.hats)
-        self.assertEqual (99.0, buzz.hats)
-        self.assertEqual (105.0, mike.hats)
+        self.assertEqual (99, neil.hats)
+        self.assertEqual (99, buzz.hats)
+        self.assertEqual (103, mike.hats)

@@ -1,3 +1,5 @@
+from decimal import Decimal as D
+
 import lib.byh
 
 class Outcome (lib.byh.Byh):
@@ -52,7 +54,7 @@ class Outcome (lib.byh.Byh):
 
     @odds.setter
     def odds (self, v):
-        self._odds = v
+        self._odds = D(v)
 
     @property
     def winner (self):
