@@ -112,7 +112,7 @@ class Bet (lib.byh.Byh):
         hats    = kwa.get ('hats')
         outcome = kwa.get ('outcome')
 
-        user.sub (hats)
+        user.hats -= hats
         user.save ()
 
         lib.wager.Wager (
