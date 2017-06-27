@@ -50,41 +50,67 @@ class TestSmoke (tests.base.TestBase):
         o0 = derby.outcomes[0]
         o1 = derby.outcomes[1]
 
-        neil = lib.user.User (nick = 'neil')
-        buzz = lib.user.User (nick = 'buzz')
-        mike = lib.user.User (nick = 'mike')
-
         derby.bet (
-            user    = neil,
+            user    = lib.user.User (nick = 'neil'),
             hats    = 2,
             outcome = o0,
         )
         derby.bet (
-            user    = buzz,
+            user    = lib.user.User (nick = 'buzz'),
             hats    = 2,
             outcome = o0,
         )
         derby.bet (
-            user    = mike,
+            user    = lib.user.User (nick = 'mike'),
             hats    = 2,
             outcome = o1,
         )
 
         self.assertEqual (3, len (derby.wagers))
-        self.assertEqual (1, len (neil.wagers))
+        self.assertEqual (1, len (lib.user.User (nick = 'mike').wagers))
 
-        self.assertEqual (99, neil.hats)
-        self.assertEqual (99, buzz.hats)
-        self.assertEqual (99, mike.hats)
+        self.assertEqual (99, lib.user.User (nick = 'neil').hats)
+        self.assertEqual (99, lib.user.User (nick = 'buzz').hats)
+        self.assertEqual (99, lib.user.User (nick = 'mike').hats)
 
         derby.settle (outcome = o1)
         self.assertEqual (1, sum (1 for _ in (i for i in derby.wagers_won)))
 
-        # reload for wins/losses
-        neil = lib.user.User (nick = 'neil')
-        buzz = lib.user.User (nick = 'buzz')
-        mike = lib.user.User (nick = 'mike')
+        self.assertEqual (99, lib.user.User (nick = 'neil').hats)
+        self.assertEqual (99, lib.user.User (nick = 'buzz').hats)
+        self.assertEqual (103, lib.user.User (nick = 'mike').hats)
 
-        self.assertEqual (99, neil.hats)
-        self.assertEqual (99, buzz.hats)
-        self.assertEqual (103, mike.hats)
+    def test_003 (self):
+        derby  = lib.bet.Bet (id = self.bet_id)
+        o0 = derby.outcomes[0]
+        o1 = derby.outcomes[1]
+
+        derby.bet (
+            user    = lib.user.User (nick = 'neil'),
+            hats    = 2,
+            outcome = o0,
+        )
+        derby.bet (
+            user    = lib.user.User (nick = 'buzz'),
+            hats    = 2,
+            outcome = o0,
+        )
+        derby.bet (
+            user    = lib.user.User (nick = 'mike'),
+            hats    = 2,
+            outcome = o1,
+        )
+
+        self.assertEqual (3, len (derby.wagers))
+        self.assertEqual (1, len (lib.user.User (nick = 'neil').wagers))
+
+        self.assertEqual (99, lib.user.User (nick = 'neil').hats)
+        self.assertEqual (99, lib.user.User (nick = 'buzz').hats)
+        self.assertEqual (99, lib.user.User (nick = 'mike').hats)
+
+        derby.settle (outcome = o0)
+        self.assertEqual (2, sum (1 for _ in (i for i in derby.wagers_won)))
+
+        self.assertEqual (102, lib.user.User (nick = 'neil').hats)
+        self.assertEqual (102, lib.user.User (nick = 'buzz').hats)
+        self.assertEqual (99, lib.user.User (nick = 'mike').hats)

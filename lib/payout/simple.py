@@ -1,4 +1,7 @@
+from decimal import Decimal as D
+
 import lib.payout.payout as payout
+
 
 class Simple (payout.Payout):
 
@@ -10,7 +13,7 @@ class Simple (payout.Payout):
         assert (self.bet.wins != 0)
 
         # payout_factor
-        pf = self.bet.pot / self.bet.wins
+        pf = D (self.bet.pot / self.bet.wins)
 
         self.logger.info ('[settle bet <{}>] pot: {}'.format (self.bet.id, self.bet.pot))
         self.logger.info ('[settle bet <{}>] wins: {}'.format (self.bet.id, self.bet.wins))
