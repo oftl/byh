@@ -1,5 +1,4 @@
 import warnings
-import logging
 
 import lib.byh
 import lib.db as db
@@ -7,6 +6,23 @@ import lib.wager
 import lib.outcome
 
 import lib.payout.simple
+
+class Bets (lib.byh.Byh):
+
+    def __init__ (self):
+        self._bets = None
+
+    @property
+    def bets (self):
+        if not self._bets:
+            self.db = db.Bet.select()
+            self._bets = [Bet (id = b.id) for b in self.db]
+
+        return self._bets
+
+    @bets.setter
+    def bets (self, v):
+        self._bets = v
 
 class Bet (lib.byh.Byh):
 

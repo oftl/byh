@@ -2,7 +2,7 @@ import os
 
 from peewee import *
 
-DB_FILENAME = './BYH_TEST_DATABASE'
+DB_FILENAME = './byh.sqlite'
 DB = SqliteDatabase (DB_FILENAME)
 
 class User (Model):

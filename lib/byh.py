@@ -1,13 +1,4 @@
-import logging
-
-logging.basicConfig (
-    format = '%(asctime)s %(message)s',
-    filename = './byh.log',
-    level = logging.INFO,
-)
-
 class Byh (object):
-    logger = logging.getLogger('byhlog')
 
     @property
     def name (self):

@@ -1,11 +1,11 @@
-import logging
+import logger
 from decimal import Decimal
 
-class Account (object):
+class Account (logger.Logger):
 
     def add (self, amount):
         amount = Decimal (amount)
-        logging.info ('adding {} to {}'.format (amount, self.name))
+        self.logger.info ('adding {} to {}'.format (amount, self.name))
         self.balance += amount
 
     def sub (self, amount):
@@ -13,7 +13,7 @@ class Account (object):
         if self.balance < amount:
             raise UserWarning ('balance too small')
 
-        logging.info ('subtracting {} from {}'.format (amount, self.name))
+        self.logger.info ('subtracting {} from {}'.format (amount, self.name))
         self.balance -= amount
 
     @property
@@ -23,5 +23,5 @@ class Account (object):
     @balance.setter
     def balance (self, v):
         v = Decimal (v)
-        logging.info ('setting balance of {} to {}'.format (self.name, v))
+        self.logger.info ('setting balance of {} to {}'.format (self.name, v))
         self._balance = v
