@@ -1,4 +1,5 @@
 import warnings
+import json
 
 import lib.byh
 import lib.db as db
@@ -149,6 +150,7 @@ class Bet (lib.byh.Byh):
         strategy = lib.payout.payout.Payout (bet = self)
         strategy.payout()
 
+
     def __repr__ (self):
         ret = '{classname} (owner = "{owner}", text = {text})'.format (
             classname = self.__class__.__name__,
@@ -157,8 +159,9 @@ class Bet (lib.byh.Byh):
             text = self.text,
         )
 
-        for oc in self.outcomes:
-            ret += str(oc)
+        ret += ' outcomes = [{ocs}]'.format (
+            ocs = ', '.join ([ str(o) for o in self.outcomes ])
+        ) if self.outcomes else ''
 
         return ret
 
@@ -266,3 +269,13 @@ class Bet (lib.byh.Byh):
             raise UserWarning ('bet not settled')
 
         return sum ([w.hats for w in self.wagers])
+
+class BetJSONEncoder (json.JSONEncoder):
+    def default (self, o):
+        return dict (
+            owner = dict (
+                id = o.owner.id,
+                nick = o.owner.nick,
+            ),
+            text = o.text,
+        )
