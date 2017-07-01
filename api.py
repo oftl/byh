@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from bottle import route, post, get, run, template
+from bottle import request, response, route, post, get, run, template
 import logging
 import json
 
@@ -19,35 +19,131 @@ def get_logger():
 
 logger = get_logger()
 
+
+mk_url = lambda path: '{scheme}://{host}/{path}'.format (
+    scheme = request.urlparts[0],
+    host   = request.urlparts[1],
+    path   = path,
+)
+
+
 @get('/bets')
 def bets():
     bets = lib.bet.Bets().bets
 
-    links = [
-       dict (rel = 'index', href = '/'),
-    ]
+    response.set_header('Content-Type', 'application/vnd.collection+json')
 
-    return json.dumps (dict (
-        data = dict (bets = json.dumps (bets, cls=lib.bet.BetJSONEncoder)),
-        links = json.dumps (links),
-    ))
+    return json.dumps (
+        dict (
+            collection = dict (
+                version = '1.0',
+                href = '/bets',
+                items = [
+                    dict (
+                        href  = mk_url ('bet/{bet_id}'.format (bet_id = bet.id)),
+                        # a partial representation of a single bet
+                        data = [
+                            # also prompt is allowed here!
+                            dict ( name = 'text', value = bet.text ),
+                            dict ( name = 'owner_nick', value = bet.owner.nick ),
+                            dict ( name = 'owner_id', value = bet.owner.id ),
+                        ],
+                        links = [
+                            dict (
+                                # also prompt and name are allowed here!
+                                href = mk_url ('bet/{bet_id}/bet'.format (bet_id = bet.id)),
+                                rel = 'do_bet',
+                                render = 'link',
+                            ),
+                            dict (
+                                href = mk_url ('user/{owner_id}'.format (owner_id = bet.owner.id)),
+                                rel = 'owner',
+                                render = 'link',
+                            ),
+                        ],
+                    ) for bet in bets
+                ],
+                links = [
+                    dict (href = mk_url (''), rel = 'home', render = 'link'),
+                ],
+                queries = [
+                    dict (
+                        href = mk_url ('search'),
+                        rel = 'search',
+                        prompt = 'Search for bets',
+                        data = [ dict (name = 'query', value = '') ],
+                    )
+                ],
+                template = dict (
+                    data = [
+                        dict ( prompt = 'Text of new bet', name = 'text', value = ''),
+                        # dict ( prompt = 'Owner', name = 'owner', value = logged_in_user),
+                    ]
+                ),
+                # error = dict (title = None, code = None, message = None),
+                error = None,
+            ),
+        ),
+        # cls = lib.bet.BetJSONEncoder,  # here be magic
+    )
 
-@post ('/bet/')
-def add_bet():
-    logger.info (request.json)
+@get ('/bet/<bet_id>')
+def read_bet (bet_id):
+    bet = lib.bet.Bet (id = bet_id)
 
-#     owner_id = request.forms.get ('owner_id')
-#     text = request.forms.get ('text')
-#     outcomes = request.forms.get ('text')
-#
-#         derby = Bet (
-#             owner    = laika,
-#             text     = 'Who will win the next Derby ?',
-#             outcomes = [
-#                 dict (text = 'Rapid',   odds = 2.00),
-#                 dict (text = 'Austria', odds = 2.00),
-#             ]
-#         )
+    response.set_header('Content-Type', 'application/vnd.collection+json')
+
+    return json.dumps (
+        dict (
+            collection = dict (
+                version = '1.0',
+                href = mk_url ('bet/{bet_id}'.format (bet_id = bet_id)),
+                items = [
+                    dict (
+                        href = mk_url ('bet/{bet_id}'.format (bet_id = bet_id)),
+                        # a partial representation of a single bet
+                        data = [
+                            dict (
+                                name = 'text',
+                                prompt = 'Text of bet',
+                                value = bet.text,
+                            ),
+                            dict (
+                                name = 'owner_nick',
+                                prompt = 'Nick of owner',
+                                value = bet.owner.nick,
+                            ),
+                            dict (
+                                name = 'owner_id',
+                                prompt = 'Internal id of owner',
+                                value = bet.owner.id,
+                            ),
+                        ],
+                    ),
+                ],
+                #  links = [
+                #      dict (href = mk_url (''), rel = 'home', render = 'link'),
+                #  ],
+                #  queries = [
+                #      dict (
+                #          href = mk_url ('search'),
+                #          rel = 'search',
+                #          prompt = 'Search for bets',
+                #          data = [ dict (name = 'query', value = '') ],
+                #      )
+                #  ],
+                #  template = dict (
+                #      data = [
+                #          dict ( prompt = 'Text of new bet', name = 'text', value = ''),
+                #          # dict ( prompt = 'Owner', name = 'owner', value = logged_in_user),
+                #      ]
+                #  ),
+                #  # error = dict (title = None, code = None, message = None),
+                #  error = None,
+            ),
+        ),
+        # cls = lib.bet.BetJSONEncoder,  # here be magic
+    )
 
 run (
     host = 'localhost',

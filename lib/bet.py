@@ -272,6 +272,10 @@ class Bet (lib.byh.Byh):
 
 class BetJSONEncoder (json.JSONEncoder):
     def default (self, o):
+
+        if not isinstance(o, lib.bet.Bet):
+            json.JSONEncoder.default(self, o)
+
         return dict (
             owner = dict (
                 id = o.owner.id,
